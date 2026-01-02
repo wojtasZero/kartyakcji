@@ -429,7 +429,67 @@ function nextCard() {
         });
 
         // --- START ---
-        loadData();
+        //loadData();
+
+
+
+        // 1. Stała z adresem pliku tekstowego (lokalny lub URL)
+const DEFAULT_DECK_URL = 'https://wojtaszero.github.io/gra/karty%20akcji.txt'; 
+
+// 2. Wspólna funkcja inicjująca grę (żeby nie powielać kodu)
+function loadDeckFromText(text, sourceName = 'nieznane źródło') {
+    // Dzielenie po nowych liniach i usuwanie pustych
+    const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+
+    if (lines.length > 0) {
+        deck = shuffle(lines);
+        currentIndex = 0;
+        isFlipped = false;
+
+        // Reset wizualny
+        if (typeof cardElement !== 'undefined') {
+            cardElement.classList.remove('flipped', 'discarded');
+        }
+
+        saveData();
+        updateCardView(); // Zakładam, że ta funkcja istnieje w Twoim kodzie
+        
+        console.log(`Załadowano ${deck.length} kart z: ${sourceName}`);
+        // Opcjonalnie: alert tylko jeśli to nie jest autostart, żeby nie denerwować usera
+        if (sourceName === 'Plik użytkownika') {
+             alert(`Zaimportowano i przetasowano ${deck.length} kart.`);
+        }
+    } else {
+        console.warn("Pobrany tekst nie zawiera żadnych linii/kart.");
+        if (sourceName === 'Plik użytkownika') alert("Plik jest pusty!");
+    }
+}
+
+// 4. NOWOŚĆ: Logika Autostartu (pobieranie z URL przy starcie)
+document.addEventListener('DOMContentLoaded', () => {
+    // Sprawdzamy, czy mamy już zapisany stan gry, żeby nie nadpisywać postępu
+    // Jeśli chcesz ZAWSZE resetować grę przy odświeżeniu, usuń ten warunek if (localStorage...)
+    if (localStorage.getItem('deck') && localStorage.getItem('deck') !== '[]') {
+        console.log("Przywrócono zapisaną grę, pomijam autostart z URL.");
+        // Tutaj powinna być Twoja funkcja loadData() lub init(), która przywraca stan
+        return; 
+    }
+
+    // Jeśli nie ma zapisu, pobieramy z URL
+    fetch(DEFAULT_DECK_URL)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Błąd HTTP: ${response.status}`);
+            }
+            return response.text();
+        })
+        .then(text => {
+            loadDeckFromText(text, 'URL Autostart');
+        })
+        .catch(error => {
+            console.error("Nie udało się pobrać domyślnej talii:", error);
+        });
+});
 
     </script>
 </body>
